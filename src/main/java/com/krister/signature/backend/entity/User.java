@@ -17,6 +17,11 @@ public class User {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name="user_id")
 	private long id;
+	private String username;
+	private String password;
+	@Lob
+	private Blob signatureKey;
+	
 	public long getId() {
 		return id;
 	}
@@ -41,8 +46,5 @@ public class User {
 	public void setSignatureKey(Blob signatureKey) {
 		this.signatureKey = signatureKey;
 	}
-	private String username;
-	private String password;
-	@Lob
-	private Blob signatureKey;
+	
 }

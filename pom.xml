@@ -52,6 +52,19 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>commons-io</groupId>
+    		<artifactId>commons-io</artifactId>
+    		<version>2.4</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.github.tsohr/json -->
+		<dependency>
+    		<groupId>com.github.tsohr</groupId>
+    		<artifactId>json</artifactId>
+    		<version>0.0.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
