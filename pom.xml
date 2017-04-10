@@ -60,10 +60,18 @@
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/com.github.tsohr/json -->
+		<!-- forked from org.json but has json-mapping done with LinkedHashMap -->
 		<dependency>
     		<groupId>com.github.tsohr</groupId>
     		<artifactId>json</artifactId>
     		<version>0.0.1</version>
+		</dependency>
+		
+		<!-- a library for adding cryptography support for PEM-files -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.51</version>
 		</dependency>
 	</dependencies>
 

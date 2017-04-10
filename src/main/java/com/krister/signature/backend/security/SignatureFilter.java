@@ -56,7 +56,14 @@ public class SignatureFilter extends GenericFilterBean{
 			request.getRequestDispatcher("/error/signature").forward(request, response);
 			return;
 		} else if (signatureMatch) {
-			
+			HttpServletRequestWrapper rw = null;
+			//here we can trim the request body content from signature related form and pass just the parameters
+			//needed by REST endpoint
+			if (request.getContentType() == "Application/json") {
+				rw = trimRequestJsonContent(request,requestContent);
+			} else {
+				rw = trimRequestFormContent(request,requestContent);
+			}
 		} else {
 			request.setAttribute("error", "an error occurred");
 			request.getRequestDispatcher("/error/signature").forward(request, response);
@@ -85,8 +92,6 @@ public class SignatureFilter extends GenericFilterBean{
 		User user = userService.findByUsername(requestContent.getString("user"));
 		if (user != null && hexTimeWithinLimit(hexTime)) {
 			return cryptService.verifyHmacSignature(signature,payload,user);
-			//finish this functionality
-			
 		}
 		return false;
 	}
@@ -117,6 +122,16 @@ public class SignatureFilter extends GenericFilterBean{
 			return true;
 		}
 		return false;
+	}
+	
+	private HttpServletRequestWrapper trimRequestJsonContent(HttpServletRequestWrapper request, byte[] requestContent) {
+		//finish this method
+		return request;
+	}
+	
+	private HttpServletRequestWrapper trimRequestFormContent(HttpServletRequestWrapper request, byte[] requestContent) {
+		//finish this method
+		return request;
 	}
 
 }
