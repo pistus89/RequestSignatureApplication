@@ -11,6 +11,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.filter.GenericFilterBean;
@@ -37,30 +38,33 @@ public class SignatureFilter extends GenericFilterBean{
 		
 		
 		HttpServletRequest req = (HttpServletRequest) arg0;
-		if (req.getRequestURI().contains("exchangeKey")) {
+		if (req.getRequestURI().contains("exchangeKey") || req.getAttribute("error") != null || req.getMethod().equals("GET")) {
 			//signature is not delivered during a key-exchange process so request can be passed
-			
+			//GET-methods don't have any body content and therefore they need to have other means of verification
+			arg2.doFilter(req, arg1);
+			return;
 		}
 		HttpServletRequestCacheWrapper request = new HttpServletRequestCacheWrapper((HttpServletRequest)arg0);
 		HttpServletResponseCaptureWrapper response = new HttpServletResponseCaptureWrapper((HttpServletResponse)arg1);
 		byte[] requestContent = parseRequestContent(request);
 		boolean signatureMatch = false;
-		if (request.getContentType().equals("Application/json")) {
+		if (request.getContentType().equals("application/json")) {
 			signatureMatch = verifySignatureFromJSONBody(requestContent, request);
 		} else {
 			signatureMatch = verifySignatureFromFormBody(requestContent, request);
 		}
 		
 		if (request.getAttribute("error") != null && !request.getAttribute("error").toString().isEmpty()) {
-			
 			request.getRequestDispatcher("/error/signature").forward(request, response);
 			return;
 		} else if (signatureMatch) {
+			
 			HttpServletRequestWrapper rw = null;
 			//here we can trim the request body content from signature related form and pass just the parameters
 			//needed by REST endpoint
-			if (request.getContentType() == "Application/json") {
+			if (request.getContentType().equals("application/json")) {
 				rw = trimRequestJsonContent(request,requestContent);
+				arg2.doFilter(request, response);
 			} else {
 				rw = trimRequestFormContent(request,requestContent);
 			}
@@ -70,7 +74,10 @@ public class SignatureFilter extends GenericFilterBean{
 			return;
 		}
 		//handle response format by generating a new signature from the content
-		response.getWriter();
+		if (response.getBufferSize() != 0) {
+			HttpServletResponseWrapper signedResponse = generateResponseSignatureContent(response,requestContent);
+		}
+		
 	}
 	
 	private byte[] parseRequestContent(HttpServletRequestCacheWrapper req) {
@@ -89,10 +96,12 @@ public class SignatureFilter extends GenericFilterBean{
 		JSONObject requestContent = root.getJSONObject("content");
 		String payload = requestContent.getString("payload");
 		String hexTime = payload.substring(payload.length()- 8,payload.length()-1);
-		User user = userService.findByUsername(requestContent.getString("user"));
-		if (user != null && hexTimeWithinLimit(hexTime)) {
+		User user = userService.findByUsername(requestContent.getString("username"));
+		System.out.println("user is "+ user.getUsername() + " time is within limit: "+ isHexTimeWithinLimit(hexTime));
+		if (user != null && isHexTimeWithinLimit(hexTime)) {
 			return cryptService.verifyHmacSignature(signature,payload,user);
 		}
+		
 		return false;
 	}
 	
@@ -114,24 +123,32 @@ public class SignatureFilter extends GenericFilterBean{
 		return object;
 	}
 	
-	private boolean hexTimeWithinLimit(String hexTime) {
+	private boolean isHexTimeWithinLimit(String hexTime) {
 		//the hexTime is supposed to be unix time in seconds UTF
 		Date hexDate = new Date(Long.parseLong(hexTime, 16)*1000);
 		Date maxDate = new Date(System.currentTimeMillis() + (MAX_TIME_LIMIT_MINUTES * 60 * 1000));
-		if (hexDate.before(maxDate)) {
-			return true;
-		}
-		return false;
+		return hexDate.before(maxDate);
+			
 	}
 	
-	private HttpServletRequestWrapper trimRequestJsonContent(HttpServletRequestWrapper request, byte[] requestContent) {
-		//finish this method
+	private HttpServletRequestWrapper trimRequestJsonContent(HttpServletRequestCacheWrapper request, byte[] requestContent) throws UnsupportedEncodingException {
+		JSONObject object = parseJSONBody(requestContent,request.getCharacterEncoding());
+		JSONObject content = object.getJSONObject("content");
+		content.remove("payload");
+		System.out.println("content: " + content.toString());
+		byte[] parsedContent = content.toString().getBytes(request.getCharacterEncoding());
+		request.writeNewBodyContent(parsedContent);
 		return request;
 	}
 	
 	private HttpServletRequestWrapper trimRequestFormContent(HttpServletRequestWrapper request, byte[] requestContent) {
 		//finish this method
 		return request;
+	}
+	
+	private HttpServletResponseWrapper generateResponseSignatureContent(HttpServletResponseCaptureWrapper response, byte[] requestContent) {
+		//finish this method
+		return response;
 	}
 
 }
