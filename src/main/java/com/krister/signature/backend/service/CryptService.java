@@ -41,7 +41,6 @@ public class CryptService {
 			String generatedSignature = new String(localGenerated);
 			generatedSignature.toUpperCase();
 			signature.toUpperCase();
-			System.out.println("requestSig: "+ signature + " generatedSig: " + generatedSignature);
 			return generatedSignature.equals(signature);
 
 		} catch (GeneralSecurityException | SQLException e) {

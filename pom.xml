@@ -59,13 +59,13 @@
     		<version>2.4</version>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/com.github.tsohr/json -->
-		<!-- forked from org.json but has json-mapping done with LinkedHashMap -->
+		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
-    		<groupId>com.github.tsohr</groupId>
+    		<groupId>org.json</groupId>
     		<artifactId>json</artifactId>
-    		<version>0.0.1</version>
+    		<version>20160810</version>
 		</dependency>
+		
 		
 		<!-- a library for adding cryptography support for PEM-files -->
 		<dependency>
