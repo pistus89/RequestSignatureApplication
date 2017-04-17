@@ -1,5 +1,6 @@
 package com.krister.signature.backend.service;
 
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -9,7 +10,9 @@ import java.sql.SQLException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +21,9 @@ import com.krister.signature.backend.entity.User;
 @Scope("prototype")
 @Service("CryptService")
 public class CryptService {
+	
+	@Autowired
+	private RSAPemKeyService keyService;
 	
 	private static final String HASH_ALG= "HmacSHA512";
 	private static final int BLOB_START = 1;
@@ -48,5 +54,9 @@ public class CryptService {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public String decryptPemEncryptedSecret(String secret) throws InvalidCipherTextException, IOException {
+		return new String(keyService.decryptMessageWithPEM(secret.getBytes()));
 	}
 }
